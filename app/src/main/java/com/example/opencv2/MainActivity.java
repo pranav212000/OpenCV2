@@ -22,7 +22,7 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
     private static final String TAG = "MainActivity";
     CameraBridgeViewBase mCameraBridgeViewBase;
-    int counter = 0;
+    boolean startCanny = false;
 
     BaseLoaderCallback mBaseLoaderCallback = new BaseLoaderCallback(this) {
         @Override
@@ -39,6 +39,19 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
             }
         }
     };
+
+    public static Mat rotate(Mat src, double angle) {
+        Mat dst = new Mat();
+        if (angle == 180 || angle == -180) {
+            Core.flip(src, dst, -1);
+        } else if (angle == 90 || angle == -270) {
+            Core.flip(src.t(), dst, 1);
+        } else if (angle == 270 || angle == -90) {
+            Core.flip(src.t(), dst, 0);
+        }
+
+        return dst;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -57,6 +70,14 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
 
     }
 
+    public void canny(View view) {
+        if (startCanny) {
+            startCanny = false;
+        } else {
+            startCanny = true;
+        }
+    }
+
     @Override
     public void onCameraViewStarted(int width, int height) {
 
@@ -71,15 +92,14 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
     public Mat onCameraFrame(CameraBridgeViewBase.CvCameraViewFrame inputFrame) {
 
         Mat frame = inputFrame.rgba();
-        if (counter % 2 == 0) {
-//            Core.flip(frame, frame, 1);
-//            Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGBA2GRAY);
+
+        if (startCanny) {
+            Imgproc.cvtColor(frame, frame, Imgproc.COLOR_RGBA2GRAY);
+            Imgproc.Canny(frame, frame, 100, 80);
         }
 
-        counter++;
         return frame;
     }
-
 
     @Override
     protected void onResume() {
@@ -108,21 +128,6 @@ public class MainActivity extends AppCompatActivity implements CameraBridgeViewB
         if (mCameraBridgeViewBase != null) {
             mCameraBridgeViewBase.disableView();
         }
-    }
-
-
-    public static Mat rotate(Mat src, double angle)
-    {
-        Mat dst = new Mat();
-        if(angle == 180 || angle == -180) {
-            Core.flip(src, dst, -1);
-        } else if(angle == 90 || angle == -270) {
-            Core.flip(src.t(), dst, 1);
-        } else if(angle == 270 || angle == -90) {
-            Core.flip(src.t(), dst, 0);
-        }
-
-        return dst;
     }
 
 }
